@@ -1,25 +1,27 @@
 package main
 
-import "fmt"
-import "net/http"
-import "bytes"
-//import "encoding/json"
+// a demo follow the tutorial: https://studygolang.com/articles/9467
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"time"
+	"go-http/handlers"
+)
 
 func main() {
 	fmt.Println("Hello World!")
-	resp, err := http.Get("https://quotes.rest/qod")
-	if err!=nil {
-		fmt.Println(err)
-		return
-	}
 
-	defer resp.Body.Close()
+	mux := http.NewServeMux()
+	rh := http.RedirectHandler("http://www.baidu.com", 307)
+	mux.Handle("/foo", rh)
+	
+	mux.HandleFunc("/time", handlers.NewTimeHandlerFunc(time.RFC1123))
+	mux.HandleFunc("/time/rfc1123", handlers.NewTimeHandlerFunc(time.RFC1123))
+	mux.HandleFunc("/time/rfc3339", handlers.NewTimeHandlerFunc(time.RFC3339))
 
-	buf := bytes.NewBuffer(make([]byte, 1024))
-
-	length,_ := buf.ReadFrom(resp.Body)
-
-	fmt.Println(len(buf.Bytes()))
-	fmt.Println(length)
-	fmt.Println(string(buf.Bytes()))
+	log.Println("Listening...")
+	
+	http.ListenAndServe(":3000", mux)
 }
