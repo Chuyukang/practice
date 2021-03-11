@@ -19,8 +19,6 @@ func main() {
 
 	timeHandler := handlers.MakeRateLimitHandler(
 		handlers.NewTimeHandlerFunc(time.RFC1123),
-		0.05,
-		1,
 	)
 	mux.HandleFunc("/time", timeHandler)
 	mux.HandleFunc("/time/rfc1123", handlers.NewTimeHandlerFunc(time.RFC1123))
