@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"go-http/handlers"
+	"go-http/service"
 	"log"
 	"net/http"
 	"time"
@@ -17,8 +18,13 @@ func main() {
 	rh := http.RedirectHandler("http://www.baidu.com", 307)
 	mux.Handle("/foo", rh)
 
+	// require PricingPlanService get a bucket for rate limiting
+	var s handlers.PricingPlanService
+	s = service.NewPricingPlanService()
+
 	timeHandler := handlers.MakeRateLimitHandler(
 		handlers.NewTimeHandlerFunc(time.RFC1123),
+		s,// wire service
 	)
 	mux.HandleFunc("/time", timeHandler)
 	mux.HandleFunc("/time/rfc1123", handlers.NewTimeHandlerFunc(time.RFC1123))

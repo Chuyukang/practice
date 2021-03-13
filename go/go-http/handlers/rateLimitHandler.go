@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"go-http/service"
 	"net/http"
 )
 import "golang.org/x/time/rate"
@@ -18,11 +17,7 @@ type PricingPlanService interface {
 // MakeRateLimitHandler make a rate limited handler
 // limit: rps, b: max value of token
 // default hardcoded three type of limitation, select by apikey header
-func MakeRateLimitHandler(next http.HandlerFunc) http.HandlerFunc {
-
-	// require PricingPlanService get a bucket for rate limiting
-	var s PricingPlanService
-	s = service.NewPricingPlanService()
+func MakeRateLimitHandler(next http.HandlerFunc, s PricingPlanService) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		apikey := r.Header.Get("X-api-key")
