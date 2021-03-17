@@ -3,12 +3,13 @@ package main
 import "fmt"
 import "net/http"
 import "bytes"
+
 //import "encoding/json"
 
 func main() {
 	fmt.Println("Hello World!")
 	resp, err := http.Get("https://quotes.rest/qod")
-	if err!=nil {
+	if err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -17,7 +18,7 @@ func main() {
 
 	buf := bytes.NewBuffer(make([]byte, 1024))
 
-	length,_ := buf.ReadFrom(resp.Body)
+	length, _ := buf.ReadFrom(resp.Body)
 
 	fmt.Println(len(buf.Bytes()))
 	fmt.Println(length)
