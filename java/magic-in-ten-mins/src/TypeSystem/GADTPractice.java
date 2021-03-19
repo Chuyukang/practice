@@ -3,12 +3,12 @@ package TypeSystem;
 // GADT 广义代数数据类型
 // 以类型作为参数的类型？
 
-// Expr<Integer> = IVal
-// Expr<Boolean> = BVal
+// Expr<Integer> = IVal + Add
+// Expr<Boolean> = BVal + Eq<T>
 // Add = Expr<Integer> * Expr<Integer>
 // Eq<T> = Expr<T> * Expr<T>
 interface Expr<T> {
-    public T getValue();
+    T getValue();
 }
 class IVal implements Expr<Integer> {
     Integer value;
@@ -66,7 +66,7 @@ public class GADTPractice {
         System.out.println(e3.getValue());
 
         Expr<Boolean> b1=new BVal(true), b2=new BVal(false);
-        Expr<Boolean> b3=new Eq<Boolean>(b1, b2);
+        Expr<Boolean> b3=new Eq<>(b1, b2);
         System.out.println(b3.getValue());
     }
 
