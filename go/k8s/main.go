@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"time"
@@ -25,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 	//
 	// Uncomment to load all auth plugins
 	// _ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -46,6 +48,12 @@ func main() {
 	}
 	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var metricCS *metricsv.Clientset
+	metricCS, err = metricsv.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -76,6 +84,7 @@ func main() {
 		// get available pods name by specifying function name
 		namespace := "openfaas-fn"
 		functionName := "show-backend"
+		// label selector: faas_function, faas_function=<functionName>
 		selector := labels.NewSelector()
 		legalFunctionReq, _ := labels.NewRequirement("faas_function", selection.Exists, []string{})
 		functionNameReq, _ := labels.NewRequirement("faas_function", selection.Equals, []string{functionName})
@@ -88,7 +97,20 @@ func main() {
 			fmt.Println("Pod List error!")
 		}
 		for _, item := range backends.Items {
-			fmt.Printf("%s %s %s\n", item.ObjectMeta.Name, item.Status.Phase, item.Status.PodIP)
+			podName := item.Name
+			fmt.Printf("%s %s %s\n", podName, item.Status.Phase, item.Status.PodIP)
+			// get metric info
+			podMetric, _ := metricCS.MetricsV1beta1().PodMetricses(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+			// sum container metrics
+			podMemory := &resource.Quantity{}
+			podCPU := &resource.Quantity{}
+			containersMetricsList := podMetric.Containers
+			for _, containerMetrics := range containersMetricsList {
+				podMemory.Add(containerMetrics.Usage[v1.ResourceMemory])
+				podCPU.Add(containerMetrics.Usage[v1.ResourceCPU])
+			}
+			// show metric info
+			fmt.Printf("%s %s %s\n", podName, podMemory, podCPU)
 		}
 
 		time.Sleep(10 * time.Second)
